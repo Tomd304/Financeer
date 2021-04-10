@@ -1,0 +1,76 @@
+{% extends "layout_search.html" %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block script %}
+
+<script>
+
+
+</script>
+
+{% endblock %}
+
+{% block body %}
+
+    {% if data %}
+    <div class="container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Company Name</th>
+                    <th scope="col">Exchange</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in data %}
+                <tr>
+                    <td><a href="/search/{{company.symbol}}">{{company.symbol}}</a></td>
+                    <td>{{company.shortname}}</td>
+                    <td>{{company.exchange}}</td>
+                    <td>{{company.currency}}</td>
+                    {% if company.watchlist %}
+                        <td><form method="post"><button class="btn btn-small btn-light btn-outline-dark center" name="removewatch" value="{{company.symbol}}">Watched</button></form></td>
+                    {% else %}
+                        <td><form method="post"><button class="btn btn-small btn-dark btn-outline-light center" name="watch" value="{{company.symbol}}">Watchlist+</button></form></td>
+                    {% endif %}
+                        
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if company %}
+    <div class="container">
+        <div class="jumbotron">
+            <h1 class="display-4">{{company.name}} ({{company.symbol}})</h1>
+            <p class="lead">Current Price: {{company.price | currency(company.currency)}}</p>
+            <hr class="my-4">
+            <p class="lead">
+                <a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a>
+            </p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Test</th>
+                    <th scope="col">Test</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in company %}
+                <tr>
+                    <td>{{data}}</td>
+                    <td>{{company[data]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+{% endblock %}

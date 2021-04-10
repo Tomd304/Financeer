@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block search %}
+<br />
+
+<div class="container">
+    <form class="form-wrapper" method="post" action="/search">
+        <div class="input-group text-center">
+            <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search"
+                   aria-describedby="search-addon" name="search" id="stocksearch" />
+            <button type="submit" class="btn btn-dark btn-outline-light">search</button>
+        </div>
+    </form>
+</div>
+
+<br />
+
+<br />
+
+{% endblock %}
