@@ -9,7 +9,7 @@ from helpers import password_check, login_required, get_db, query_db, check_sign
 from helpers import currency, percentage
 from datetime import timedelta
 import sqlite3, yfinance as yf, requests, json
-from yfinance_help import ticker_info_dict
+#from yfinance_help import ticker_info_dict
 
 
 
@@ -88,18 +88,29 @@ def search(ticker):
             #for company in session["last_search"]:
             #    if (company["symbol"] == request.form['removewatch']):
             #        company["watchlist"] = None
-            return render_template("search.html", data = session["last_search"])
+            return render_template("search.html", data = session["last_search"])     
 
-            
-        
-            
-    elif (request.method == "GET"):       
-        if ticker:
-            company = ticker_info_dict(ticker)
-        else:
-            company = {}
-            company = None
-        return render_template("search.html", company=company)
+
+@app.route('/stock', defaults={'ticker' : None}, methods=["GET", "POST"])
+@app.route('/stock/<ticker>', methods=["GET", "POST"])
+def stock(ticker):
+
+    if request.method == "POST":
+        if "watch" in request.form:
+            watchlist_add(ticker)
+        elif "removewatch" in request.form:
+            watchlist_remove(ticker)
+    if ticker:
+        company = yf.Ticker(ticker).info
+        price = yf.Ticker(ticker).history(period='7d')["Close"]
+        watch = get_watchlist()
+        watched = False
+        for comp in watch:
+            if ticker == comp["symbol"]:
+                watched = True
+
+
+    return render_template("stock.html", company=company, price=price, watched=watched)
 
 @app.route('/watchlist', methods=["GET", "POST"])
 def watchlist():

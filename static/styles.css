@@ -153,10 +153,10 @@ body {
             font-size: 14px;
         }
 
-tr .positive {
+.positive {
     color: green;
 }
 
-tr .negative {
+.negative {
     color: red;
 }

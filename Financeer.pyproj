@@ -44,6 +44,7 @@
     <Content Include="templates\login.html" />
     <Content Include="templates\search.html" />
     <Content Include="templates\signup.html" />
+    <Content Include="templates\stock.html" />
     <Content Include="templates\watchlist.html" />
   </ItemGroup>
   <ItemGroup>

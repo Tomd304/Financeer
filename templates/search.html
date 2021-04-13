@@ -27,7 +27,7 @@
             <tbody>
                 {% for company in data %}
                 <tr>
-                    <td><a href="/search/{{company.symbol}}">{{company.symbol}}</a></td>
+                    <td><a href="/stock/{{company.symbol}}">{{company.symbol}}</a></td>
                     <td>{{company.shortname}}</td>
                     <td>{{company.exchange}}</td>
                     <td>{{company.currency}}</td>
@@ -37,35 +37,6 @@
                         <td><form method="post"><button class="btn btn-small btn-dark btn-outline-light center" name="watch" value="{{company.symbol}}">Watchlist+</button></form></td>
                     {% endif %}
                         
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-
-    {% if company %}
-    <div class="container">
-        <div class="jumbotron">
-            <h1 class="display-4">{{company.name}} ({{company.symbol}})</h1>
-            <p class="lead">Current Price: {{company.price | currency(company.currency)}}</p>
-            <hr class="my-4">
-            <p class="lead">
-                <a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a>
-            </p>
-        </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Test</th>
-                    <th scope="col">Test</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in company %}
-                <tr>
-                    <td>{{data}}</td>
-                    <td>{{company[data]}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

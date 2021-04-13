@@ -1,19 +1,21 @@
 import yfinance as yf
 
-def ticker_info_dict(ticker):
-        company = {}
-        company["info"] = yf.Ticker(ticker).info
-        print(company["info"])
-        company["price"] = yf.Ticker(ticker).history(period='7d')
-        print(company["price"])
-        companyr = {
-                    "symbol":company["info"]["symbol"], 
-                    "name":company["info"]["shortName"], 
-                    "exchange":company["info"]["exchange"], 
-                    "currency":company["info"]["currency"],
-                    "price":company["price"]["Close"][-1]                    
-                    }
-        return companyr;
+#def ticker_info_dict(ticker):
+#        company = {}
+#        company["info"] = yf.Ticker(ticker).info
+#        print(company["info"])
+#        company["price"] = yf.Ticker(ticker).history(period='7d')
+#        print(company["price"])
+#        companyr = {
+#                    "symbol":company["info"]["symbol"], 
+#                    "name":company["info"]["shortName"], 
+#                    "exchange":company["info"]["exchange"], 
+#                    "currency":company["info"]["currency"],
+#                    "price":company["price"]["Close"][-1]                    
+#                    }
+#        return companyr;
+
+     
 
 def filter_badhtml(str):
     print(str)

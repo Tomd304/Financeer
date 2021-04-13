@@ -1,0 +1,71 @@
+{% extends "layout_search.html" %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block script %}
+
+<script>
+
+
+</script>
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="jumbotron">
+            <h1 class="display-4">{{company.shortName}} ({{company.symbol}})</h1>
+            <br />
+            <p class="lead">Current Price: {{price[-1] | currency(company.currency)}}</p>
+            {% if (price[-1] > price[-2]) %}
+            <p class="lead positive">
+                {% else %}
+            <p class="lead negative">
+                {% endif %}
+                Change: {{(price[-1] - price[-2]) | currency(company.currency)}} ({{(price[-1] / (price[-1] - price[-2]) /100 ) | percentage}})
+            </p>
+            <p class="lead">Security Type: {{company.quoteType.capitalize()}}</p>
+            <hr class="my-4">
+
+            <p class="lead">
+                {% if company.description %}
+                {{ company.description }}
+                {% elif company.longBusinessSummary %}
+                {{ company.longBusinessSummary }}
+                {% endif %}
+            </p>
+            <form method="post">
+                {% if watched %}
+                    <button type="submit" class="btn btn-light btn-outline-dark btn-lg" value="{{company.symbol}}" name="removewatch">Watched</button>
+                {% else %}
+                    <button type="submit" class="btn btn-dark btn-outline-light btn-lg" value="{{company.symbol}}" name="watch">Watchlist+</button>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="container">
+            {% if company.country %}
+            <p>Country: {{company.country}}</p>
+            {% endif %}
+            <p>Exchange: {{company.exchange}}</p>
+            {% if company.sector %}
+            <p>Sector: {{company.sector}}</p>
+            {% endif %}
+        </div>
+    </div>
+            <!--</div>
+        <table class="table table-striped">
+            <tbody>
+                {% for data in company %}
+                {% if company[data] != None and company[data] != 0 and company[data] != "" %}
+                <tr>
+                    <td>{{data.capitalize()}}: </td>
+                    <td>{{company[data]}}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>-->
+            {% endblock %}
