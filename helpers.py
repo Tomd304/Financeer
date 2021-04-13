@@ -69,7 +69,8 @@ def watchlist_add(ticker):
     #ADDS TO DB IF NOT
     if not (user):
         company = yf.Ticker(ticker).info
-        get_db().execute("INSERT INTO stocks (symbol, name, currency) VALUES (?, ?, ?)", (company["symbol"], company["shortName"], company["currency"]))
+        print(company)
+        get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], company["currency"], company["quoteType"]))
         get_db().commit()
     #CHECKS IF STOCK IS IN WATCHLIST DATABASE
     stock = query_db("SELECT * FROM user_stocks WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)
@@ -95,14 +96,22 @@ def get_prices(li):
         print(company["symbol"])
         tempprice = yf.Ticker(company["symbol"]).history(period='7d')["Close"]
 
-        if (len(tempprice) == 1) :
+        #if (len(tempprice) == 1) :
+        #    prevClose = yf.Ticker(company["symbol"]).info["previousClose"]
+        #    daily_change = tempprice[-1] - prevClose
+        #    perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)            
+        if company["quoteType"] == "INDEX":
             prevClose = yf.Ticker(company["symbol"]).info["previousClose"]
             daily_change = tempprice[-1] - prevClose
-            perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)            
+            perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)         
         else:
             prevClose = tempprice[-2]
             daily_change = tempprice[-1] - tempprice[-2]
             perc_daily_change = ((tempprice[-1] / tempprice[-2] - 1) * 100)
+
+
+
+
         dictlist.append({"symbol":company["symbol"], 
                          "name":company["name"], 
                          "currency":company["currency"], 
