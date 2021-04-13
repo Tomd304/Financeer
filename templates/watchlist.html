@@ -14,7 +14,6 @@
             <tr>
                 <th scope="col">Company</th>
                 <th scope="col">Current Price</th>
-                <th scope="col">Type</th>
                 <th scope="col">Change</th>
             </tr>
         </thead>
@@ -23,7 +22,7 @@
             <tr>
                 <td>{{company.name}} ({{company.symbol}})</td>
                 <td>{{company.price | currency(company.currency)}}</td>
-                <td></td>
+                <td>{{company.daily_change | currency(company.currency)}} ({{company.perc_daily_change | percentage}})</td>
                 <td><form method="post"><button class="btn btn-small btn-danger center" name="removewatch" value="{{company.symbol}}">-</button></form></td>
                 
             </tr>

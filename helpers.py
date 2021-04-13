@@ -89,16 +89,28 @@ def get_watchlist():
     return wl
 
 def get_prices(li):
-    dict = {}
     dictlist = []
     i = 0
     for company in li:
+        print(company["symbol"])
+        tempprice = yf.Ticker(company["symbol"]).history(period='7d')["Close"]
+
+        if (len(tempprice) == 1) :
+            prevClose = yf.Ticker(company["symbol"]).info["previousClose"]
+            daily_change = tempprice[-1] - prevClose
+            perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)            
+        else:
+            prevClose = tempprice[-2]
+            daily_change = tempprice[-1] - tempprice[-2]
+            perc_daily_change = ((tempprice[-1] / tempprice[-2] - 1) * 100)
         dictlist.append({"symbol":company["symbol"], 
                          "name":company["name"], 
                          "currency":company["currency"], 
-                         "price":yf.Ticker(company["symbol"]).history(period='7d')["Close"][-1]
+                         "price":tempprice[-1],
+                         "previousClose":prevClose,
+                         "daily_change": daily_change,
+                         "perc_daily_change": perc_daily_change
                          })
-    print(dictlist)
     return dictlist
 
 #CURRENCY FORMATTERS
@@ -106,7 +118,22 @@ def get_prices(li):
 def currency(value, currency):
     """Format value as USD."""
     if currency.lower() == "usd":
-        return f"${value:,.2f}"
+        if value <= 0.1 and value > -0.1:
+            return f"${value:,.4f}"
+        else:
+            return f"${value:,.2f}"
     elif currency.lower() == "gbp":
-        return f"{value:,.2f}p"
-    
+        if value <= 0.1 and value > -0.1:
+            return f"{value:,.4f}p"
+        else:
+            return f"{value:,.2f}p"
+    elif currency.lower() == "eur":
+        return f"€{value:,.2f}"
+    elif currency.lower() == "cad":
+        return f"CA${value:,.2f}"
+    elif currency.lower() == "hkd":
+        return f"HK${value:,.2f}"
+
+
+def percentage(value):
+    return f"{value:,.2f}%"

@@ -5,7 +5,8 @@ It contains the definition of routes and views for the application.
 
 from flask import Flask, render_template, session, request, flash, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
-from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, currency, watchlist_add, get_watchlist, get_prices, watchlist_remove
+from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove
+from helpers import currency, percentage
 from datetime import timedelta
 import sqlite3, yfinance as yf, requests, json
 from yfinance_help import ticker_info_dict
@@ -22,8 +23,9 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME= timedelta(days=7)
 )
 
-# Custom filter
+# Custom filtera
 app.jinja_env.filters["currency"] = currency
+app.jinja_env.filters["percentage"] = percentage
 
 @app.teardown_appcontext
 def close_connection(exception):
