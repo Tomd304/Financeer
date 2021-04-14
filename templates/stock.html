@@ -17,13 +17,13 @@
         <div class="jumbotron">
             <h1 class="display-4">{{company.shortName}} ({{company.symbol}})</h1>
             <br />
-            <p class="lead">Current Price: {{price[-1] | currency(company.currency)}}</p>
-            {% if (price[-1] > price[-2]) %}
+            <p class="lead">Current Price: {{price.price[-1] | currency(company.currency)}}</p>
+            {% if (price.price[-1] > price.price[-2]) %}
             <p class="lead positive">
                 {% else %}
             <p class="lead negative">
                 {% endif %}
-                Change: {{(price[-1] - price[-2]) | currency(company.currency)}} ({{(price[-1] / (price[-1] - price[-2]) /100 ) | percentage}})
+                Change: {{ price.dailychange | currency(company.currency)}} ({{price.percdailychange | percentage}})
             </p>
             <p class="lead">Security Type: {{company.quoteType.capitalize()}}</p>
             <hr class="my-4">

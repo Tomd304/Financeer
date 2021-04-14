@@ -5,7 +5,7 @@ It contains the definition of routes and views for the application.
 
 from flask import Flask, render_template, session, request, flash, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
-from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove
+from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove, add_to_stockdb, get_price
 from helpers import currency, percentage
 from datetime import timedelta
 import sqlite3, yfinance as yf, requests, json
@@ -101,8 +101,10 @@ def stock(ticker):
         elif "removewatch" in request.form:
             watchlist_remove(ticker)
     if ticker:
+        add_to_stockdb(ticker)
         company = yf.Ticker(ticker).info
-        price = yf.Ticker(ticker).history(period='7d')["Close"]
+        price = {}
+        price = get_price(ticker)
         watch = get_watchlist()
         watched = False
         for comp in watch:
@@ -127,8 +129,8 @@ def watchlist():
             print(session["watchlist"])
             return render_template('watchlist.html', companies=session["watchlist"])   
     elif request.method == "GET":
-        info = get_watchlist()
-        dict = get_prices(info)
+        list = get_watchlist()
+        dict = get_prices(list)
         session["watchlist"] = dict
         return render_template('watchlist.html', companies=session["watchlist"])
 

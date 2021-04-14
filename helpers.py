@@ -64,14 +64,8 @@ def store_session(login, permanent):
     session["user_name"] = user["username"]
     
 def watchlist_add(ticker):
-    #CHECKS IF STOCK IS IN DATABASE
-    user = query_db("SELECT * FROM stocks WHERE symbol = ?", [ticker], one=True)
-    #ADDS TO DB IF NOT
-    if not (user):
-        company = yf.Ticker(ticker).info
-        print(company)
-        get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], company["currency"], company["quoteType"]))
-        get_db().commit()
+    #adds info to stock db
+    add_to_stockdb(ticker)
     #CHECKS IF STOCK IS IN WATCHLIST DATABASE
     stock = query_db("SELECT * FROM user_stocks WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)
     #ADDS TO WATCHLIST DB IF NOT
@@ -94,33 +88,44 @@ def get_prices(li):
     i = 0
     for company in li:
         print(company["symbol"])
-        tempprice = yf.Ticker(company["symbol"]).history(period='7d')["Close"]
-
-        #if (len(tempprice) == 1) :
-        #    prevClose = yf.Ticker(company["symbol"]).info["previousClose"]
-        #    daily_change = tempprice[-1] - prevClose
-        #    perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)            
-        if company["quoteType"] == "INDEX":
-            prevClose = yf.Ticker(company["symbol"]).info["previousClose"]
-            daily_change = tempprice[-1] - prevClose
-            perc_daily_change = ((tempprice[-1] / prevClose - 1) * 100)         
-        else:
-            prevClose = tempprice[-2]
-            daily_change = tempprice[-1] - tempprice[-2]
-            perc_daily_change = ((tempprice[-1] / tempprice[-2] - 1) * 100)
-
-
-
-
+        price = get_price(company["symbol"])       
         dictlist.append({"symbol":company["symbol"], 
                          "name":company["name"], 
                          "currency":company["currency"], 
-                         "price":tempprice[-1],
-                         "previousClose":prevClose,
-                         "daily_change": daily_change,
-                         "perc_daily_change": perc_daily_change
+                         "price":price["price"][-1],
+                         "previousClose":price["prevClose"],
+                         "daily_change": price["dailychange"],
+                         "perc_daily_change": price["percdailychange"]
                          })
     return dictlist
+
+def get_price(ticker):
+    stock = query_db("SELECT * FROM stocks WHERE symbol = ?", [ticker], one=True)
+    tempprice = yf.Ticker(ticker).history(period='7d')["Close"]
+    print(stock["quoteType"])
+    if stock["quoteType"] == "INDEX":
+        prevClose = yf.Ticker(ticker).info["previousClose"]
+    else:
+        prevClose = tempprice[-2]
+    prices = {}
+
+    
+    prices["price"] = yf.Ticker(ticker).history(period='7d')["Close"]
+    prices["prevClose"] = prevClose
+    prices["dailychange"] = tempprice[-1] - prevClose
+    prices["percdailychange"] = prices["dailychange"] / tempprice[-1] * 100
+
+    return prices;
+
+def add_to_stockdb(ticker):
+    #CHECKS IF STOCK IS IN DATABASE
+    user = query_db("SELECT * FROM stocks WHERE symbol = ?", [ticker], one=True)
+    #ADDS TO DB IF NOT
+    if not (user):
+        company = yf.Ticker(ticker).info
+        print(company)
+        get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], company["currency"], company["quoteType"]))
+        get_db().commit()
 
 #CURRENCY FORMATTERS
 
