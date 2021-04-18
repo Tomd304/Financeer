@@ -62,7 +62,27 @@ def store_session(login, permanent):
         session.permanent = True
     session["user_id"] = user["id"]
     session["user_name"] = user["username"]
-    
+   
+def get_portfolio():
+    pl = query_db("SELECT * FROM stocks WHERE id IN (SELECT stock_id FROM portfolio WHERE user_id = ?)", [session["user_id"]])    
+    return pl
+
+def portfolio_add(ticker):
+    #adds info to stock db
+    add_to_stockdb(ticker)
+    #CHECKS IF STOCK IS IN WATCHLIST DATABASE
+    stock = query_db("SELECT * FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)
+    #ADDS TO WATCHLIST DB IF NOT
+    if not (stock):
+        get_db().execute("INSERT INTO portfolio (user_id, stock_id) VALUES (?, (SELECT id FROM stocks WHERE symbol = ?))", (session["user_id"], ticker))
+        get_db().commit()
+
+def portfolio_remove(ticker):
+    #checking ticker is in watchlist db
+    if (query_db("SELECT * FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)):
+        get_db().execute("DELETE FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker))
+        get_db().commit()
+
 def watchlist_add(ticker):
     #adds info to stock db
     add_to_stockdb(ticker)

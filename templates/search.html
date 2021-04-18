@@ -32,11 +32,15 @@
                     <td>{{company.exchange}}</td>
                     <td>{{company.currency}}</td>
                     {% if company.watchlist %}
-                        <td><form method="post"><button class="btn btn-small btn-light btn-outline-dark center" name="removewatch" value="{{company.symbol}}">Watched</button></form></td>
+                    <td><form method="post"><button class="btn btn-small btn-light btn-outline-dark center" name="removewatch" value="{{company.symbol}}">Watched</button></form></td>
                     {% else %}
-                        <td><form method="post"><button class="btn btn-small btn-dark btn-outline-light center" name="watch" value="{{company.symbol}}">Watchlist+</button></form></td>
+                    <td><form method="post"><button class="btn btn-small btn-dark btn-outline-light center" name="watch" value="{{company.symbol}}">Watchlist+</button></form></td>
                     {% endif %}
-                        
+                    {% if company.portfolio %}
+                    <td><form method="post" class="forrm-control"><button class="btn btn-small btn-light btn-outline-dark center" name="removeportfolio" value="{{company.symbol}}">In Portfolio</button></form></td>
+                    {% else %}
+                    <td><form method="post" class="forrm-control"><button class="btn btn-small btn-dark btn-outline-light center" name="portfolio" value="{{company.symbol}}">Portfolio+</button></form></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

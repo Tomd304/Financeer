@@ -1,0 +1,44 @@
+{% extends "layout_search.html" %}
+
+{% block title %} Portfolio {% endblock %}
+
+{% block script %}{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1>MY PORTFOLIO</h1>
+    <hr /><br />
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Company</th>
+                <th scope="col">Current Price</th>
+                <th scope="col">Change</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in companies %}
+            <tr>
+                <td><a href="/stock/{{company.symbol}}">{{company.name}} ({{company.symbol}})</a></td>
+                <td>{{company.price | currency(company.currency)}}</td>
+                {% if company.daily_change > 0 %}
+                <td class="positive">
+                    {% elif company.daily_change < 0 %}
+                <td class="negative">
+                    {% elif company.daily_change == 0 %}
+                <td>
+                    {% endif %}
+                    {{company.daily_change | currency(company.currency)}} ({{company.perc_daily_change | percentage}})
+                </td>
+
+                <td><form method="post"><button class="btn btn-small btn-danger center" name="removewatch" value="{{company.symbol}}">-</button></form></td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock %}

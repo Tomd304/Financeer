@@ -5,7 +5,7 @@ It contains the definition of routes and views for the application.
 
 from flask import Flask, render_template, session, request, flash, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
-from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove, add_to_stockdb, get_price
+from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove, add_to_stockdb, get_price, portfolio_add, get_portfolio, portfolio_remove
 from helpers import currency, percentage
 from datetime import timedelta
 import sqlite3, yfinance as yf, requests, json
@@ -44,51 +44,31 @@ def home():
 @app.route('/search', defaults={'ticker' : None}, methods=["GET", "POST"])
 @app.route('/search/<ticker>')
 def search(ticker):
+    if request.method == "GET":
+        if session["search_change"] == True:
+            session["search_change"] = False
+            getsearchlist(session["search_term"])
+            return render_template("search.html", data = session["last_search"])  
+        return render_template("search.html")
+
     if request.method == "POST":
         if ("search" in request.form):
-            #grabs search term from search bar
-            search_term = request.form["search"]
-            #yahoo search endpoint
-            url = "https://query2.finance.yahoo.com/v1/finance/search"
-            #yahoo search endpoint params - limited to 7 results??
-            params = {'q': search_term, 'quotesCount': 7, 'newsCount': 0}
-            #grabs request
-            r = requests.get(url, params=params)
-            #converts json to python object (useful info in quotes)
-            data = r.json()
-            #grab watchlist from DB
-            watchlist = get_watchlist()
-            for watched in watchlist:
-                for company in data["quotes"]:
-                    if company["symbol"] in watched["symbol"]:
-                        company["watchlist"] = True
-            if search_term == '':
-                session["last_search"] = None
-            else:
-                session["last_search"] = data["quotes"]
-            return render_template("search.html", data = session["last_search"])
-        elif ("watch" in request.form):
-            watchlist_add(request.form['watch'])
-            for i in range(len(session["last_search"])):
-                if (session["last_search"][i]["symbol"] == request.form['watch']):
-                    session["last_search"][i]["watchlist"] = True
-                    session["last_search"] = session["last_search"]
-            #for company in session["last_search"]:
-            #    if (company["symbol"] == request.form['watch']):
-            #        company["watchlist"] = True
-            return render_template("search.html", data = session["last_search"])
-        elif ("removewatch" in request.form):
-            watchlist_remove(request.form['removewatch'])
+            session["search_term"] = request.form["search"]
+            getsearchlist(session["search_term"])
+            return render_template("search.html", data = session["last_search"])  
+              
 
-            for i in range(len(session["last_search"])):
-                if (session["last_search"][i]["symbol"] == request.form['removewatch']):
-                    session["last_search"][i]["watchlist"] = None
-                    session["last_search"] = session["last_search"]
-
-            #for company in session["last_search"]:
-            #    if (company["symbol"] == request.form['removewatch']):
-            #        company["watchlist"] = None
-            return render_template("search.html", data = session["last_search"])     
+        if request.method == "POST":
+            if ("watch" in request.form):
+                watchlist_add(request.form['watch'])
+            elif ("removewatch" in request.form):
+                watchlist_remove(request.form['removewatch'])
+            elif ("portfolio" in request.form):
+                portfolio_add(request.form['portfolio'])
+            elif ("removeportfolio" in request.form):
+                portfolio_remove(request.form['removeportfolio'])
+            session["search_change"] = True
+            return redirect('search')        
 
 
 @app.route('/stock', defaults={'ticker' : None}, methods=["GET", "POST"])
@@ -110,7 +90,6 @@ def stock(ticker):
         for comp in watch:
             if ticker == comp["symbol"]:
                 watched = True
-
 
     return render_template("stock.html", company=company, price=price, watched=watched)
 
@@ -134,7 +113,14 @@ def watchlist():
         session["watchlist"] = dict
         return render_template('watchlist.html', companies=session["watchlist"])
 
+@app.route('/portfolio', methods=["GET", "POST"])
+def portfolio():
 
+    if request.method == "POST":
+        if ("portfolio" in request.form):
+            portfolio_add(ticker)
+
+    return render_template('portfolio.html')
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -184,7 +170,33 @@ def logout():
     session.clear()
     return redirect('/')
 
+def getsearchlist(search_term):
+    #yahoo search endpoint
+    url = "https://query2.finance.yahoo.com/v1/finance/search"
+    #yahoo search endpoint params - limited to 7 results??
+    params = {'q': search_term, 'quotesCount': 7, 'newsCount': 0}
+    #grabs request
+    r = requests.get(url, params=params)
+    #converts json to python object (useful info in quotes)
+    data = r.json()
+    #grab watchlist from DB
+    watchlist = get_watchlist()
+    portfolio = get_portfolio()
+    session["search_term"] = search_term
 
+    #pulls watchlist and portfolio list and creates datalist and stores in user session
+    for company in data["quotes"]:
+        for watched in watchlist:
+            if company["symbol"] == watched["symbol"]:
+                company["watchlist"] = True
+                print(company)
+        for iportfolio in portfolio:
+            if company["symbol"] == iportfolio["symbol"]:
+                company["portfolio"] = True
+    if search_term == '':
+        session["last_search"] = None
+    else:
+        session["last_search"] = data["quotes"]
 
 if __name__ == '__main__':
     import os

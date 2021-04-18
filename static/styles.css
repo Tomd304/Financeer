@@ -160,3 +160,8 @@ body {
 .negative {
     color: red;
 }
+
+td form .form-control {
+    display:inline-block;
+    width: 92.81px;
+}

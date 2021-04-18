@@ -42,6 +42,7 @@
     <Content Include="templates\layout.html" />
     <Content Include="templates\layout_search.html" />
     <Content Include="templates\login.html" />
+    <Content Include="templates\portfolio.html" />
     <Content Include="templates\search.html" />
     <Content Include="templates\signup.html" />
     <Content Include="templates\stock.html" />
