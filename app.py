@@ -5,13 +5,13 @@ It contains the definition of routes and views for the application.
 
 from flask import Flask, render_template, session, request, flash, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
-from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove, add_to_stockdb, get_price, portfolio_add, get_portfolio, portfolio_remove
-from helpers import currency, percentage
+from helpers import password_check, login_required, get_db, query_db, check_signup_details, check_login_details, store_session, watchlist_add, get_watchlist, get_prices, watchlist_remove, add_to_stockdb, get_price, portfolio_add, get_portfolio, portfolio_remove, get_portfolio, setquantity_portfolio
+from helpers import currency, percentage, converttogbp, get_conversion_rates, formatgbp, customportfolio_add, get_customportfolio, customportfolio_remove, setvalue_customportfolio
 from datetime import timedelta
 import sqlite3, yfinance as yf, requests, json
 #from yfinance_help import ticker_info_dict
 
-
+#gitcheck
 
 app = Flask(__name__)
 
@@ -26,6 +26,8 @@ app.config.update(
 # Custom filtera
 app.jinja_env.filters["currency"] = currency
 app.jinja_env.filters["percentage"] = percentage
+app.jinja_env.filters["converttogbp"] = converttogbp
+app.jinja_env.filters["formatgbp"] = formatgbp
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -115,12 +117,42 @@ def watchlist():
 
 @app.route('/portfolio', methods=["GET", "POST"])
 def portfolio():
-
     if request.method == "POST":
-        if ("portfolio" in request.form):
-            portfolio_add(ticker)
+        if ("quantity" in request.form):
+            quantity = request.form["quantity"]
+            ticker = request.form["symbol"]
+            setquantity_portfolio(ticker, quantity)
+        elif ("removeportfolio" in request.form):
+            portfolio_remove(request.form["removeportfolio"])
+        elif ("newaccount" in request.values):
+            accname = request.form["AccountName"]
+            accvalue = request.form["AccountValue"]
+            customportfolio_add(accname, accvalue)
+        elif ("deleteaccount" in request.values):
+            print(request.form["AccountName"])
+            customportfolio_remove(request.form["AccountName"])
+        elif ("changeaccountvalue" in request.values):
+            setvalue_customportfolio(request.form["AccountName"], request.form["AccountValue"])
 
-    return render_template('portfolio.html')
+    list = get_portfolio()
+    dict = get_prices(list)
+    session["portfolio"] = dict
+    print(session["portfolio"])
+    conversion_rates = get_conversion_rates(session["portfolio"])
+    stock_total = 0
+    custom_total = 0
+    total_value = 0
+    for company in session["portfolio"]:
+        if company["currency"] == "GBp":
+            stock_total += (company["price"] * company["quantity"] / 100)
+        else:
+            stock_total += company["price"] / conversion_rates[company["currency"]] * company["quantity"]
+    custom_accounts = get_customportfolio()
+    for acc in custom_accounts:
+        custom_total += acc["value"]
+    total_value = stock_total + custom_total
+    return render_template('portfolio.html', companies=session["portfolio"], conversion=conversion_rates, total_value=total_value, custom_accounts=custom_accounts)
+
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -175,8 +207,10 @@ def getsearchlist(search_term):
     url = "https://query2.finance.yahoo.com/v1/finance/search"
     #yahoo search endpoint params - limited to 7 results??
     params = {'q': search_term, 'quotesCount': 7, 'newsCount': 0}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/93.0'}
     #grabs request
-    r = requests.get(url, params=params)
+    r = requests.get(url, params=params, headers=headers)
+    print(r.url)
     #converts json to python object (useful info in quotes)
     data = r.json()
     #grab watchlist from DB

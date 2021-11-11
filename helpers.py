@@ -63,9 +63,30 @@ def store_session(login, permanent):
     session["user_id"] = user["id"]
     session["user_name"] = user["username"]
    
-def get_portfolio():
-    pl = query_db("SELECT * FROM stocks WHERE id IN (SELECT stock_id FROM portfolio WHERE user_id = ?)", [session["user_id"]])    
-    return pl
+def customportfolio_add(name, value):
+    #CHECK IF ACC NAME IS IN DATABASE
+    acc = query_db("SELECT * FROM customportfolio WHERE user_id = ? and accname = ?", (session["user_id"], name), one=True)
+
+    #ADDS ACC TO DB IF NOT
+    if not (acc):
+        get_db().execute("INSERT INTO customportfolio (user_id, accname, value) VALUES (?, ?, ?)", (session["user_id"], name, value))
+        get_db().commit()
+
+def get_customportfolio(): 
+    wl = query_db("SELECT accname, value FROM customportfolio WHERE user_id = ?", ([session["user_id"]]))
+    return wl
+
+def customportfolio_remove(accname):
+    #checking ticker is in watchlist db
+    if (query_db("SELECT * FROM customportfolio WHERE user_id = ? and accname = ?", (session["user_id"], accname), one=True)):
+        get_db().execute("DELETE FROM customportfolio WHERE user_id = ? and accname = ?", (session["user_id"], accname))
+        get_db().commit()
+
+def setvalue_customportfolio(accname, value):
+    #setting quantity of a single holding
+    get_db().execute("UPDATE customportfolio SET value = ? WHERE user_id = ? and accname = ?", (value, session["user_id"], accname))
+    get_db().commit()
+
 
 def portfolio_add(ticker):
     #adds info to stock db
@@ -74,7 +95,7 @@ def portfolio_add(ticker):
     stock = query_db("SELECT * FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)
     #ADDS TO WATCHLIST DB IF NOT
     if not (stock):
-        get_db().execute("INSERT INTO portfolio (user_id, stock_id) VALUES (?, (SELECT id FROM stocks WHERE symbol = ?))", (session["user_id"], ticker))
+        get_db().execute("INSERT INTO portfolio (user_id, stock_id, quantity) VALUES (?, (SELECT id FROM stocks WHERE symbol = ?), ?)", (session["user_id"], ticker, 0))
         get_db().commit()
 
 def portfolio_remove(ticker):
@@ -82,6 +103,17 @@ def portfolio_remove(ticker):
     if (query_db("SELECT * FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)):
         get_db().execute("DELETE FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker))
         get_db().commit()
+
+def setquantity_portfolio(ticker, quantity):
+    #setting quantity of a single holding
+    get_db().execute("UPDATE portfolio SET quantity = ? WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (quantity, session["user_id"], ticker))
+    get_db().commit()
+
+def get_portfolio():
+    #wl = query_db("SELECT * FROM stocks WHERE id IN (SELECT stock_id FROM portfolio WHERE user_id = ?)" [session["user_id"]])    
+    wl = query_db("SELECT stocks.*, portfolio.quantity FROM stocks inner join portfolio on portfolio.stock_id = stocks.id WHERE id IN (SELECT stock_id FROM portfolio WHERE user_id = ?);", ([session["user_id"]]))
+    return wl
+
 
 def watchlist_add(ticker):
     #adds info to stock db
@@ -107,16 +139,22 @@ def get_prices(li):
     dictlist = []
     i = 0
     for company in li:
-        print(company["symbol"])
-        price = get_price(company["symbol"])       
+        price = get_price(company["symbol"])
+
         dictlist.append({"symbol":company["symbol"], 
                          "name":company["name"], 
                          "currency":company["currency"], 
                          "price":price["price"][-1],
                          "previousClose":price["prevClose"],
                          "daily_change": price["dailychange"],
-                         "perc_daily_change": price["percdailychange"]
+                         "perc_daily_change": price["percdailychange"],
                          })
+
+        print(company)
+        if len(company) > 5:
+            dictlist[i]["quantity"] = company["quantity"]
+            dictlist[i]["value"] = dictlist[i]["quantity"] * dictlist[i]["price"]
+        i+=1
     return dictlist
 
 def get_price(ticker):
@@ -125,6 +163,8 @@ def get_price(ticker):
     print(stock["quoteType"])
     if stock["quoteType"] == "INDEX":
         prevClose = yf.Ticker(ticker).info["previousClose"]
+    elif stock["quoteType"] == "CURRENCY" and len(tempprice) == 1 :
+        prevClose = tempprice[0]
     else:
         prevClose = tempprice[-2]
     prices = {}
@@ -144,29 +184,73 @@ def add_to_stockdb(ticker):
     if not (user):
         company = yf.Ticker(ticker).info
         print(company)
-        get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], company["currency"], company["quoteType"]))
+        if (company["currency"] == None):
+            get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], "None", company["quoteType"]))
+        else:
+            get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], company["currency"], company["quoteType"]))
         get_db().commit()
 
+
+def get_conversion_rates(list):
+    currencylist = []
+    conversion_rates = {}
+    #Makes list of currenct currencies in use
+    for company in list:
+        if company["currency"] not in currencylist:
+            currencylist.append(company["currency"])
+    #finds conversion rates
+    for currency in currencylist:
+        conversionticker = "GBP" + currency.upper() + "=X"
+        conversion_rates.update ({currency : yf.Ticker(conversionticker).history(period='7d')["Close"][0]})
+    
+    return conversion_rates
+    print(currencylist)
+    print(conversion_rates)
 #CURRENCY FORMATTERS
 
 def currency(value, currency):
     """Format value as USD."""
     if currency.lower() == "usd":
-        if value <= 0.1 and value > -0.1:
-            return f"${value:,.4f}"
+        if value <= 0.1 and value > -0.1 and value != 0:
+            return f"${value:,.3f}"
         else:
             return f"${value:,.2f}"
-    elif currency.lower() == "gbp":
-        if value <= 0.1 and value > -0.1:
-            return f"{value:,.4f}p"
+    elif currency == "GBp":
+        if value <= 0.1 and value > -0.1 and value != 0:
+            return f"{value:,.3f}p"
+        elif value >= 100:
+            return f"£{value/100:,.2f}"
         else:
             return f"{value:,.2f}p"
+    elif currency == "GBP":
+        return f"£{value:,.2f}"
     elif currency.lower() == "eur":
         return f"€{value:,.2f}"
     elif currency.lower() == "cad":
-        return f"CA${value:,.2f}"
+        return f"CAD${value:,.2f}"
     elif currency.lower() == "hkd":
         return f"HK${value:,.2f}"
+    elif currency.lower() == "mxn":
+        return f"{value:,.2f}MXN"
+    elif currency.lower() == "ars":
+        return f"{value:,.2f}ARS"
+    elif currency.lower() == "sgd":
+        return f"{value:,.2f}SGD"
+    else:
+        return f"{value:,.2f}?"
+
+
+def converttogbp(value, conversion, currency):
+    
+    if currency == "GBp":
+        gbpvalue = value / 100
+    else:
+        gbpvalue = value / conversion[currency]
+
+    return f"£{gbpvalue:,.2f}"
+    
+def formatgbp(value):
+    return f"£{value:,.2f}"
 
 
 def percentage(value):
