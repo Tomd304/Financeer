@@ -149,6 +149,7 @@ def portfolio():
             stock_total += company["price"] / conversion_rates[company["currency"]] * company["quantity"]
     custom_accounts = get_customportfolio()
     for acc in custom_accounts:
+        print(acc["accname"], acc["value"])
         custom_total += acc["value"]
     total_value = stock_total + custom_total
     return render_template('portfolio.html', companies=session["portfolio"], conversion=conversion_rates, total_value=total_value, custom_accounts=custom_accounts)
