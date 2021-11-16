@@ -39,7 +39,33 @@
                     {% if company.portfolio %}
                     <td><form method="post" class="forrm-control"><button class="btn btn-small btn-light btn-outline-dark center" name="removeportfolio" value="{{company.symbol}}">In Portfolio</button></form></td>
                     {% else %}
-                    <td><form method="post" class="forrm-control"><button class="btn btn-small btn-dark btn-outline-light center" name="portfolio" value="{{company.symbol}}">Portfolio+</button></form></td>
+                    <td>
+                        <button class="btn btn-small btn-dark btn-outline-light center" data-toggle="modal" name="portfolio" data-target="#form{{loop.index}}" value="{{company.symbol}}">Portfolio+</button>
+                        <div class="modal fade" id="form{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header border-bottom-0">
+                                        <h5 class="modal-title" id="exampleModalLabel">{{company.shortname}} ({{company.symbol}})</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <form method="post">
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label for="quantity">Quantity of Shares Owned:</label>
+                                                <input type="number" step="0.0001" class="form-control w-50" name="quantity">
+                                                <input type="hidden" name="companySymbol" value="{{company.symbol}}" />
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 d-flex justify-content-center">
+                                            <button type="submit" name="portfolio" class="btn btn-info">Add to Portfolio</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                     {% endif %}
                 </tr>
                 {% endfor %}

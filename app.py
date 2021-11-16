@@ -65,8 +65,9 @@ def search(ticker):
                 watchlist_add(request.form['watch'])
             elif ("removewatch" in request.form):
                 watchlist_remove(request.form['removewatch'])
-            elif ("portfolio" in request.form):
-                portfolio_add(request.form['portfolio'])
+            elif ("portfolio" in request.values):
+                print(request.form["companySymbol"], request.form["quantity"])
+                portfolio_add(request.form["companySymbol"], request.form["quantity"])
             elif ("removeportfolio" in request.form):
                 portfolio_remove(request.form['removeportfolio'])
             session["search_change"] = True
@@ -118,12 +119,11 @@ def watchlist():
 @app.route('/portfolio', methods=["GET", "POST"])
 def portfolio():
     if request.method == "POST":
-        if ("quantity" in request.form):
-            quantity = request.form["quantity"]
-            ticker = request.form["symbol"]
-            setquantity_portfolio(ticker, quantity)
-        elif ("removeportfolio" in request.form):
-            portfolio_remove(request.form["removeportfolio"])
+        if ("setPortfolioQuantity" in request.values):
+            print(request.form["CompanySymbol"], request.form["AccountQuantity"])
+            setquantity_portfolio(request.form["CompanySymbol"], request.form["AccountQuantity"])
+        elif ("removePortfolio" in request.values):
+            portfolio_remove(request.form["CompanySymbol"])
         elif ("newaccount" in request.values):
             accname = request.form["AccountName"]
             accvalue = request.form["AccountValue"]
@@ -133,6 +133,8 @@ def portfolio():
             customportfolio_remove(request.form["AccountName"])
         elif ("changeaccountvalue" in request.values):
             setvalue_customportfolio(request.form["AccountName"], request.form["AccountValue"])
+
+
 
     list = get_portfolio()
     dict = get_prices(list)

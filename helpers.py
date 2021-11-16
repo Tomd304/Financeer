@@ -88,14 +88,14 @@ def setvalue_customportfolio(accname, value):
     get_db().commit()
 
 
-def portfolio_add(ticker):
+def portfolio_add(ticker, quantity):
     #adds info to stock db
     add_to_stockdb(ticker)
-    #CHECKS IF STOCK IS IN WATCHLIST DATABASE
+    #CHECKS IF STOCK IS IN PORTFOLIO DATABASE
     stock = query_db("SELECT * FROM portfolio WHERE user_id = ? and stock_id = (SELECT id FROM stocks WHERE symbol = ?)", (session["user_id"], ticker), one=True)
-    #ADDS TO WATCHLIST DB IF NOT
+    #ADDS TO PORTFOLIO DB IF NOT
     if not (stock):
-        get_db().execute("INSERT INTO portfolio (user_id, stock_id, quantity) VALUES (?, (SELECT id FROM stocks WHERE symbol = ?), ?)", (session["user_id"], ticker, 0))
+        get_db().execute("INSERT INTO portfolio (user_id, stock_id, quantity) VALUES (?, (SELECT id FROM stocks WHERE symbol = ?), ?)", (session["user_id"], ticker, quantity))
         get_db().commit()
 
 def portfolio_remove(ticker):
