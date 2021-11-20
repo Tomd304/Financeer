@@ -16,7 +16,7 @@
     <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
     <Name>Financeer</Name>
     <RootNamespace>Financeer</RootNamespace>
-    <InterpreterId>MSBuild|Financeer_env|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|financeer_env|$(MSBuildProjectFullPath)</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -56,10 +56,10 @@
     <InterpreterReference Include="Global|PythonCore|3.9" />
   </ItemGroup>
   <ItemGroup>
-    <Interpreter Include="..\..\..\AppData\Local\Programs\Python\Venvs\Financeer_env\">
-      <Id>Financeer_env</Id>
+    <Interpreter Include="..\..\..\AppData\Local\Programs\Python\Venvs\financeer_env\">
+      <Id>financeer_env</Id>
       <Version>3.9</Version>
-      <Description>Financeer_env (Python 3.9 (64-bit))</Description>
+      <Description>financeer_env (Python 3.9)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>

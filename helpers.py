@@ -150,7 +150,6 @@ def get_prices(li):
                          "perc_daily_change": price["percdailychange"],
                          })
 
-        print(company)
         if len(company) > 5:
             dictlist[i]["quantity"] = company["quantity"]
             dictlist[i]["value"] = dictlist[i]["quantity"] * dictlist[i]["price"]
@@ -159,8 +158,9 @@ def get_prices(li):
 
 def get_price(ticker):
     stock = query_db("SELECT * FROM stocks WHERE symbol = ?", [ticker], one=True)
-    tempprice = yf.Ticker(ticker).history(period='7d')["Close"]
-    print(stock["quoteType"])
+    tempprices = yf.Ticker(ticker).history(period='5y')
+    tempprice = tempprices["Close"]
+
     if stock["quoteType"] == "INDEX":
         prevClose = yf.Ticker(ticker).info["previousClose"]
     elif stock["quoteType"] == "CURRENCY" and len(tempprice) == 1 :
@@ -170,10 +170,15 @@ def get_price(ticker):
     prices = {}
 
     
-    prices["price"] = yf.Ticker(ticker).history(period='7d')["Close"]
+    prices["price"] = tempprice
     prices["prevClose"] = prevClose
     prices["dailychange"] = tempprice[-1] - prevClose
     prices["percdailychange"] = prices["dailychange"] / tempprice[-1] * 100
+    prices["prices"] = {"Date":tempprices.index.date, 
+                        "Price":tempprice
+                        }
+
+    print(prices["prices"]["Date"][0], prices["prices"]["Price"][0])   
 
     return prices;
 
@@ -183,7 +188,6 @@ def add_to_stockdb(ticker):
     #ADDS TO DB IF NOT
     if not (user):
         company = yf.Ticker(ticker).info
-        print(company)
         if (company["currency"] == None):
             get_db().execute("INSERT INTO stocks (symbol, name, currency, quoteType) VALUES (?, ?, ?, ?)", (company["symbol"], company["shortName"], "None", company["quoteType"]))
         else:
@@ -204,8 +208,7 @@ def get_conversion_rates(list):
         conversion_rates.update ({currency : yf.Ticker(conversionticker).history(period='7d')["Close"][0]})
     
     return conversion_rates
-    print(currencylist)
-    print(conversion_rates)
+
 #CURRENCY FORMATTERS
 
 def currency(value, currency):
