@@ -43,9 +43,8 @@ def home():
     return render_template("index.html")
 
 
-@app.route('/search', defaults={'ticker' : None}, methods=["GET", "POST"])
-@app.route('/search/<ticker>')
-def search(ticker):
+@app.route('/search', methods=["GET", "POST"])
+def search():
     if request.method == "GET":
         if session["search_change"] == True:
             session["search_change"] = False
@@ -58,20 +57,16 @@ def search(ticker):
             session["search_term"] = request.form["search"]
             getsearchlist(session["search_term"])
             return render_template("search.html", data = session["last_search"])  
-              
-
-        if request.method == "POST":
-            if ("watch" in request.form):
-                watchlist_add(request.form['watch'])
-            elif ("removewatch" in request.form):
-                watchlist_remove(request.form['removewatch'])
-            elif ("portfolio" in request.values):
-                print(request.form["companySymbol"], request.form["quantity"])
-                portfolio_add(request.form["companySymbol"], request.form["quantity"])
-            elif ("removeportfolio" in request.form):
-                portfolio_remove(request.form['removeportfolio'])
-            session["search_change"] = True
-            return redirect('search')        
+        elif ("watch" in request.form):
+            watchlist_add(request.form['watch'])
+        elif ("removewatch" in request.form):
+            watchlist_remove(request.form['removewatch'])
+        elif ("portfolio" in request.values):
+            portfolio_add(request.form["companySymbol"], request.form["quantity"])
+        elif ("removeportfolio" in request.form):
+            portfolio_remove(request.form['removeportfolio'])
+        session["search_change"] = True
+        return redirect('search')        
 
 
 @app.route('/stock', defaults={'ticker' : None}, methods=["GET", "POST"])
@@ -102,13 +97,11 @@ def watchlist():
     if request.method == "POST":
         if ("removewatch" in request.form):
             watchlist_remove(request.form['removewatch'])
-            print(session["watchlist"])
             for i in range(len(session["watchlist"])):
                 if (session["watchlist"][i]["symbol"] == request.form['removewatch']):
                     del session["watchlist"][i]
                     session["watchlist"] = session["watchlist"]
                     break
-            print(session["watchlist"])
             return render_template('watchlist.html', companies=session["watchlist"])   
     elif request.method == "GET":
         list = get_watchlist()
@@ -120,7 +113,6 @@ def watchlist():
 def portfolio():
     if request.method == "POST":
         if ("setPortfolioQuantity" in request.values):
-            print(request.form["CompanySymbol"], request.form["AccountQuantity"])
             setquantity_portfolio(request.form["CompanySymbol"], request.form["AccountQuantity"])
         elif ("removePortfolio" in request.values):
             portfolio_remove(request.form["CompanySymbol"])
@@ -129,7 +121,6 @@ def portfolio():
             accvalue = request.form["AccountValue"]
             customportfolio_add(accname, accvalue)
         elif ("deleteaccount" in request.values):
-            print(request.form["AccountName"])
             customportfolio_remove(request.form["AccountName"])
         elif ("changeaccountvalue" in request.values):
             setvalue_customportfolio(request.form["AccountName"], request.form["AccountValue"])
@@ -139,7 +130,6 @@ def portfolio():
     list = get_portfolio()
     dict = get_prices(list)
     session["portfolio"] = dict
-    print(session["portfolio"])
     conversion_rates = get_conversion_rates(session["portfolio"])
     stock_total = 0
     custom_total = 0
@@ -151,7 +141,6 @@ def portfolio():
             stock_total += company["price"] / conversion_rates[company["currency"]] * company["quantity"]
     custom_accounts = get_customportfolio()
     for acc in custom_accounts:
-        print(acc["accname"], acc["value"])
         custom_total += acc["value"]
     total_value = stock_total + custom_total
     return render_template('portfolio.html', companies=session["portfolio"], conversion=conversion_rates, total_value=total_value, custom_accounts=custom_accounts)
@@ -213,7 +202,6 @@ def getsearchlist(search_term):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/93.0'}
     #grabs request
     r = requests.get(url, params=params, headers=headers)
-    print(r.url)
     #converts json to python object (useful info in quotes)
     data = r.json()
     #grab watchlist from DB
@@ -226,7 +214,6 @@ def getsearchlist(search_term):
         for watched in watchlist:
             if company["symbol"] == watched["symbol"]:
                 company["watchlist"] = True
-                print(company)
         for iportfolio in portfolio:
             if company["symbol"] == iportfolio["symbol"]:
                 company["portfolio"] = True
